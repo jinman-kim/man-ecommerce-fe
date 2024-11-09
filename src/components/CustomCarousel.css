@@ -1,0 +1,81 @@
+/* src/components/CustomCarousel.css */
+
+/* 공통 그라데이션 스타일 */
+.gradient-box {
+    position: absolute;
+    color: #000;
+    font-weight: bold;
+    line-height: 1.4;
+    font-family: Arial, sans-serif;
+    border-radius: 15px;
+    cursor: pointer;
+    /* 기본 패딩 및 폰트 사이즈 설정 */
+    padding: 5vw;
+    font-size: 2vw;
+    text-align: left;
+    background: radial-gradient(circle at 20% 30%, #f3f3f3, transparent 50%),
+        radial-gradient(circle at 80% 80%, #b5651d, transparent 60%);
+    transition: all 0.5s ease;
+}
+
+/* 좌측 그라데이션 박스 */
+.gradient-left {
+    top: 45%;
+    left: 5%;
+    transform: translateY(-50%);
+}
+
+/* 우측 그라데이션 박스 */
+.gradient-right {
+    top: 60%;
+    right: -1.5%;
+    transform: translateY(-50%);
+    background: radial-gradient(circle at 80% 40%, #f3f3f3, transparent 50%),
+        radial-gradient(circle at 30% 70%, rgb(49, 29, 181), transparent 60%);
+}
+
+/* 이미지 스타일 */
+.carousel-image {
+    width: 100%;
+    height: auto;
+    max-height: 371px;
+    object-fit: contain;
+    margin: 0 auto;
+}
+
+/* 상태 표시 텍스트 */
+.carousel-status {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 1rem;
+}
+
+/* 반응형 폰트 크기 및 패딩 조정 */
+@media (max-width: 1200px) {
+    .gradient-box {
+        padding: 6vw;
+        font-size: 1.8vw;
+    }
+}
+
+@media (max-width: 768px) {
+    .gradient-box {
+        padding: 8vw;
+        font-size: 3vw;
+    }
+
+    .carousel-image {
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 576px) {
+    .gradient-box {
+        padding: 10vw;
+        font-size: 4vw;
+    }
+
+    .carousel-image {
+        max-height: 250px;
+    }
+}
