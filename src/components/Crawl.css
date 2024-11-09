@@ -1,0 +1,24 @@
+/* src/components/Crawl.css */
+
+/* CrawlingIcon 스타일 */
+.crawling-icon {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #007bff;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    /* 다른 요소보다 위에 표시 */
+    transition: background-color 0.3s ease;
+}
+
+.crawling-icon:hover {
+    background-color: #0056b3;
+}

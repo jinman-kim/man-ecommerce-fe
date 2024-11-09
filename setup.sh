@@ -10,3 +10,6 @@
 1715  cd fe
 1716  ls
 1717  npm start
+
+npm install @reduxjs/toolkit react-redux
+npm install react-icon react-bootstrap react-router-dom

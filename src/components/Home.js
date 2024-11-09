@@ -2,11 +2,27 @@
 import React, { useState } from "react";
 import { Card, Button, Row, Col, Form, InputGroup, Container } from "react-bootstrap";
 import CustomCarousel from "./CustomCarousel"; // CustomCarousel 컴포넌트 임포트
+
+import { setCrawlData, resetCrawlData } from "../features/crawl/crawlSlice";
+import Crawl from "./Crawl"; // Crawl 컴포넌트 임포트
+import { FaSpider } from "react-icons/fa"; // CrawlingIcon 추가
 import "./Home.css"; // Home.css 임포트
 
 function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showItems, setShowItems] = useState(false);
+
+  // <Crawling> //
+  const [showModal, setShowModal] = useState(false);
+  // 폼 입력 상태
+  const [formData, setFormData] = useState({
+    productName: "",
+    startPage: "",
+    endPage: "",
+    minPrice: "",
+    maxPrice: "",
+  });
+  // </Crawling> //
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -133,6 +149,9 @@ function Home() {
           </Row>
         </>
       )}
+
+      {/* Crawl 컴포넌트 추가 */}
+      <Crawl />
     </Container>
   );
 }
