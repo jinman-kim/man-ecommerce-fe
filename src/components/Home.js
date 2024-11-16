@@ -1,20 +1,20 @@
-// src/components/Home.js
 import React, { useState } from "react";
-import { Card, Button, Row, Col, Form, InputGroup, Container } from "react-bootstrap";
+import { Card, Button, Row, Col, Form, InputGroup, Container, Spinner, Alert } from "react-bootstrap";
 import CustomCarousel from "./CustomCarousel"; // CustomCarousel 컴포넌트 임포트
-
-import { setCrawlData, resetCrawlData } from "../features/crawl/crawlSlice";
-import Crawl from "./Crawl"; // Crawl 컴포넌트 임포트
-import { FaSpider } from "react-icons/fa"; // CrawlingIcon 추가
+import axios from "axios"; // axios 임포트
 import "./Home.css"; // Home.css 임포트
 
 function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showItems, setShowItems] = useState(false);
+  const [results, setResults] = useState([]); // 검색 결과 저장
+  const [total, setTotal] = useState(0); // 검색 결과 총 개수
+  const [loading, setLoading] = useState(false); // 로딩 상태
+  const [error, setError] = useState(null); // 오류 상태
+  const [page, setPage] = useState(1); // 현재 페이지
 
-  // <Crawling> //
+  // 폼 입력 상태 (Crawling 관련 코드 그대로 유지)
   const [showModal, setShowModal] = useState(false);
-  // 폼 입력 상태
   const [formData, setFormData] = useState({
     productName: "",
     startPage: "",
@@ -22,21 +22,70 @@ function Home() {
     minPrice: "",
     maxPrice: "",
   });
-  // </Crawling> //
 
-  const handleSearch = (e) => {
+  // 페이지 당 표시할 아이템 수
+  const size = 50;
+
+  const handleSearch = async (e) => {
     e.preventDefault();
-    if (searchQuery.trim() !== "") {
-      setShowItems(true);
-    } else {
+    if (searchQuery.trim() === "") {
       setShowItems(false);
+      setResults([]);
+      setTotal(0);
+      return;
+    }
+
+    setShowItems(true);
+    setLoading(true);
+    setError(null);
+    setPage(1); // 검색 시 페이지를 1로 초기화
+
+    try {
+      const response = await axios.post("http://localhost:8001/api/v1/search/?host=http%3A%2F%2Flocalhost%3A9200", {
+        query: searchQuery,
+        page: 1,
+        size: size,
+      });
+
+      setResults(response.data.results);
+      setTotal(response.data.total);
+    } catch (err) {
+      console.error("검색 오류:", err);
+      setError("검색 중 오류가 발생했습니다. 다시 시도해주세요.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 페이지 변경 핸들러
+  const handlePageChange = async (newPage) => {
+    if (newPage < 1 || newPage > Math.ceil(total / size)) return;
+
+    setPage(newPage);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await axios.post("http://localhost:8001/api/v1/search/?host=http%3A%2F%2Flocalhost%3A9200", {
+        query: searchQuery,
+        page: newPage,
+        size: size,
+      });
+
+      setResults(response.data.results);
+      setTotal(response.data.total);
+    } catch (err) {
+      console.error("페이지 변경 오류:", err);
+      setError("페이지를 불러오는 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
     }
   };
 
   // 시간 계산 함수 (N분 전, N시간 전, N일 전 등)
   const getTimeAgo = (time) => {
     const now = new Date();
-    const diff = now - time;
+    const diff = now - new Date(time); // 서버에서 받은 registration_date가 문자열이므로 Date 객체로 변환
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -49,36 +98,6 @@ function Home() {
     if (hours > 0) return `${hours}시간 전`;
     return `${minutes}분 전`;
   };
-
-  const imageUrls = [
-    "https://media.bunjang.co.kr/product/298061152_1_1731052624_w480.jpg",
-    "https://media.bunjang.co.kr/product/298584977_1_1730801925_w266.jpg",
-    "https://media.bunjang.co.kr/product/287443439_1_1725251319_w266.jpg",
-    "https://media.bunjang.co.kr/product/293404084_1_1728490129_w266.jpg",
-    "https://media.bunjang.co.kr/product/297838529_1_1730792490_w266.jpg",
-  ];
-
-  const productNames = [
-    "발렌시아가 팬츠 xs (32~34)",
-    "갤러리디파트먼트 후드집업 M",
-    "셀린느 버킷햇 M",
-    "몽클레어 패딩 산베산 5",
-    "발렌시아가 카고 스니커즈 44",
-  ];
-
-  const items = Array.from({ length: 50 }, (_, index) => {
-    const imageIndex = index % imageUrls.length;
-    const price = Math.floor((Math.random() * 90000) / 100) * 1000 + 10000;
-    const postedTime = new Date(Date.now() - Math.floor(Math.random() * 100 * 24 * 60 * 60 * 1000));
-
-    return {
-      id: index + 1,
-      name: productNames[imageIndex],
-      image: imageUrls[imageIndex],
-      price: price.toLocaleString() + "원",
-      time: getTimeAgo(postedTime),
-    };
-  });
 
   return (
     <Container fluid>
@@ -111,47 +130,76 @@ function Home() {
       {/* 검색 결과로 보여질 상품 */}
       {showItems && (
         <>
-          <h2 className="mt-5 text-center">검색 결과</h2>
-          <div className="custom-grid">
-            {items.map((product) => (
-              <Card key={product.id} className="product-card">
-                <Card.Img variant="top" src={product.image} />
-                <Card.Body>
-                  <Card.Title className="product-title">{product.name}</Card.Title>
-                  <div className="price-time">
-                    <span className="product-price">{product.price}</span>
-                    <span className="product-time">{product.time}</span>
-                  </div>
-                </Card.Body>
-              </Card>
-            ))}
-          </div>
-        </>
-      )}
+          <h2 className="mt-5 text-center">검색 결과 ({total}개)</h2>
 
-      {/* 추천 상품 */}
-      {!showItems && (
-        <>
-          <h2 className="mt-5 text-center">추천 상품</h2>
-          <Row>
-            {items.slice(0, 5).map((product) => (
-              <Col md={4} className="mt-3" key={product.id}>
-                <Card>
-                  <Card.Img variant="top" src={product.image} />
+          {/* 로딩 상태 */}
+          {loading && (
+            <div className="text-center my-4">
+              <Spinner animation="border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </Spinner>
+            </div>
+          )}
+
+          {/* 오류 메시지 */}
+          {error && (
+            <Alert variant="danger" className="text-center">
+              {error}
+            </Alert>
+          )}
+
+          {/* 검색 결과 표시 */}
+          {!loading && !error && (
+            <div className="custom-grid">
+              {results.map((product, index) => (
+                <Card key={index} className="product-card">
+                  <a href={product.link} target="_blank" rel="noopener noreferrer">
+                    <Card.Img variant="top" src={product.src} />
+                  </a>
                   <Card.Body>
-                    <Card.Title>{product.name}</Card.Title>
-                    <Card.Text>이곳에 상품 {product.id}에 대한 설명을 입력하세요.</Card.Text>
-                    <Button variant="primary">자세히 보기</Button>
+                    <Card.Title className="product-title">{product.title}</Card.Title>
+                    <div className="price-time">
+                      <span className="product-price">{product.price.toLocaleString()}원</span>
+                      <span className="product-time">{product.registration_date}</span>
+                    </div>
+                    <div className="product-location">{product.location}</div>
+                    <Button variant="secondary" href={product.link} target="_blank">
+                      상세 보기
+                    </Button>
                   </Card.Body>
                 </Card>
+              ))}
+            </div>
+          )}
+
+          {/* 페이지네이션 */}
+          {!loading && !error && total > size && (
+            <Row className="justify-content-center my-4">
+              <Col md="auto">
+                <Button
+                  variant="primary"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1}
+                  className="me-2"
+                >
+                  이전
+                </Button>
+                <span className="align-self-center">
+                  페이지 {page} / {Math.ceil(total / size)}
+                </span>
+                <Button
+                  variant="primary"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === Math.ceil(total / size)}
+                  className="ms-2"
+                >
+                  다음
+                </Button>
               </Col>
-            ))}
-          </Row>
+            </Row>
+          )}
         </>
       )}
-
-      {/* Crawl 컴포넌트 추가 */}
-      <Crawl />
     </Container>
   );
 }
